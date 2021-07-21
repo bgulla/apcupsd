@@ -1,0 +1,92 @@
+---
+## arm64 Docker Build
+kind: pipeline
+type: docker
+name: arm-build
+
+platform:
+  os: linux
+  arch: arm
+
+steps:
+
+- name: build-publish   
+  image: plugins/docker
+  settings:
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+    repo: bgulla/apcupsd-tcp
+    auto_tag: true
+    auto_tag_suffix: drone-build-arm
+
+---
+## arm64 Docker Build
+kind: pipeline
+type: docker
+name: arm64-build
+
+platform:
+  os: linux
+  arch: arm64
+
+steps:
+
+- name: build-publish   
+  image: plugins/docker
+  settings:
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+    repo: bgulla/apcupsd-tcp
+    auto_tag: true
+    auto_tag_suffix: drone-build-arm64
+    
+---
+## AMD64 Docker Build
+kind: pipeline
+type: docker
+name: amd64-build
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+
+- name: build-publish   
+  image: plugins/docker
+  settings:
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+    repo: bgulla/apcupsd-tcp
+    auto_tag: true
+    auto_tag_suffix: drone-build-amd64
+
+---
+## Docker Manifest Step- combines both architectures into a multi-tagged image. The docker client will pull the appropriate image based on the client's architecture.
+kind: pipeline
+name: default
+
+steps:
+- name: manifest
+  image: plugins/manifest
+  settings:
+    username: 
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+    target: bgulla/apcupsd-tcp:latest
+    template: bgulla/apcupsd-tcp:drone-build-ARCH
+    platforms:
+      - linux/amd64
+      - linux/arm64
+      - linux/arm
+depends_on:
+- amd64-build
+- arm64-build
+- arm-build
